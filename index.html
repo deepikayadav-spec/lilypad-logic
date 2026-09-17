@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lilypad Logic</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#e7ece1; --panel:#f3f6ee; --ink:#12261f; --ink-2:#4d6154;
+  --rule:#c6d1bf; --rule-2:#dbe3d5;
+  --water:#3f8f88; --water-2:#2a6a6c; --water-edge:#1f4f50;
+  --pad:#2f6b4b; --pad-2:#3d8058;
+  --accent:#a8761a; --accent-ink:#fdf6e6;
+  --good:#2f7d4f; --shadow:0 1px 0 rgba(18,38,31,.06), 0 8px 24px -16px rgba(18,38,31,.4);
+  --frog-green:#59b54a; --frog-yellow:#efbe2c; --frog-red:#dd5540;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f1a17; --panel:#17241f; --ink:#e6ece3; --ink-2:#93a89a;
+    --rule:#2c3d35; --rule-2:#223029;
+    --water:#175a5e; --water-2:#0c343e; --water-edge:#072830;
+    --pad:#2b6b4c; --pad-2:#39825c;
+    --accent:#e0a93a; --accent-ink:#171103;
+    --good:#5cc183; --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f1a17; --panel:#17241f; --ink:#e6ece3; --ink-2:#93a89a;
+  --rule:#2c3d35; --rule-2:#223029;
+  --water:#175a5e; --water-2:#0c343e; --water-edge:#072830;
+  --pad:#2b6b4c; --pad-2:#39825c;
+  --accent:#e0a93a; --accent-ink:#171103;
+  --good:#5cc183; --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 28px -18px #000;
+}
+
+*{box-sizing:border-box}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Karla","Segoe UI",system-ui,sans-serif; font-size:15px; line-height:1.55;
+  padding-inline:16px; padding-block:22px 40px;
+}
+.wrap{max-width:1000px;margin:0 auto}
+
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  border-bottom:1.5px solid var(--ink);padding-bottom:10px;margin-bottom:22px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);margin:0 0 2px}
+h1{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:clamp(28px,5vw,42px);
+  line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.masthead p.sub{margin:6px 0 0;color:var(--ink-2);max-width:46ch;font-size:13.5px}
+.theme-btn{font:inherit;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:1px solid var(--rule);color:var(--ink-2);border-radius:999px;
+  padding:6px 13px;cursor:pointer}
+.theme-btn:hover{border-color:var(--ink-2);color:var(--ink)}
+
+.board{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+@media (min-width:880px){
+  .board{grid-template-columns:minmax(0,1fr) minmax(0,368px);align-items:start}
+  .pond-col{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+}
+
+.brief{display:flex;flex-direction:column;gap:14px}
+.plate-line{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.plate-no{font-family:"Fraunces",Georgia,serif;font-size:13px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent)}
+.species{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:14px;color:var(--ink-2)}
+.task{font-family:"Fraunces",Georgia,serif;font-size:clamp(19px,2.4vw,23px);line-height:1.35;
+  margin:0;text-wrap:balance;font-weight:600}
+.task code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;
+  background:var(--rule-2);padding:1px 5px;border-radius:4px;font-weight:500}
+
+.editor{background:var(--panel);border:1px solid var(--rule);border-radius:3px;
+  box-shadow:var(--shadow);overflow:hidden}
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:7px 12px;border-bottom:1px solid var(--rule-2);
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.14em}
+.status .dot{width:7px;height:7px;border-radius:50%;background:var(--rule);flex:0 0 auto}
+.status.solved{color:var(--good)} .status.solved .dot{background:var(--good)}
+.rule-block{padding:10px 14px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13.5px}
+.rule-block + .rule-block{border-top:1px dashed var(--rule-2)}
+.sel{color:var(--ink-2)}
+.sel b{color:var(--ink);font-weight:500}
+textarea.decls{display:block;width:100%;resize:none;border:0;outline:0;background:transparent;
+  color:var(--ink);font:inherit;line-height:1.7;padding:2px 0 2px 22px;min-height:1.7em;
+  caret-color:var(--accent);overflow:hidden}
+textarea.decls::placeholder{color:var(--ink-2);opacity:.55}
+.issues{margin:0;padding:10px 14px;list-style:none;border-top:1px solid var(--rule-2);
+  background:color-mix(in srgb,var(--accent) 9%,var(--panel));
+  display:flex;flex-direction:column;gap:7px}
+.issues li{font-size:12.5px;line-height:1.45;color:var(--ink);display:flex;gap:8px;align-items:flex-start}
+.issues li::before{content:"!";flex:0 0 auto;width:15px;height:15px;margin-top:2px;
+  font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;line-height:13px;text-align:center;
+  color:var(--accent);border:1px solid var(--accent);border-radius:50%}
+.issues code{font-family:"JetBrains Mono",monospace;font-size:11.5px;
+  background:var(--rule-2);padding:0 4px;border-radius:3px}
+.issues li.ok::before{content:"\2713";color:var(--good);border-color:var(--good)}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.btn{font:inherit;font-size:13px;font-weight:700;letter-spacing:.02em;cursor:pointer;
+  border-radius:3px;padding:9px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--paper)}
+button.btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+button.btn.ghost:hover{color:var(--ink);border-color:var(--ink-2)}
+button.btn:disabled{opacity:.35;cursor:not-allowed}
+button.btn.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+details.docs{border-top:1px solid var(--rule);padding-top:12px}
+details.docs summary{cursor:pointer;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-2);list-style:none}
+details.docs summary::-webkit-details-marker{display:none}
+details.docs summary::before{content:"+ ";font-family:"JetBrains Mono",monospace}
+details.docs[open] summary::before{content:"\2013 "}
+.doc{margin-top:12px}
+.doc h3{margin:0 0 3px;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500;color:var(--ink)}
+.doc p{margin:0 0 6px;font-size:13px;color:var(--ink-2)}
+.vals{display:flex;flex-wrap:wrap;gap:5px}
+.vals button{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);
+  border-radius:3px;padding:2px 6px;color:var(--ink-2);cursor:pointer;background:transparent}
+.vals button:hover{border-color:var(--accent);color:var(--accent)}
+
+.pond-col{display:flex;flex-direction:column;gap:12px;align-items:center}
+#pond-stage{position:relative;width:min(336px,100%);aspect-ratio:1/1;
+  background:
+    radial-gradient(120% 90% at 30% 10%, color-mix(in srgb,var(--water) 85%,#fff 15%), transparent 55%),
+    linear-gradient(170deg,var(--water),var(--water-2) 70%,var(--water-edge));
+  border:1px solid var(--water-edge);border-radius:4px;overflow:hidden;
+  box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--water-edge) 35%,transparent), var(--shadow)}
+#pond-stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 26px,rgba(255,255,255,.035) 26px 27px)}
+#pond,#lilypads{position:absolute;inset:0;display:flex}
+#lilypads{z-index:1}
+#pond{z-index:2}
+.frog,.pad{width:52px;height:52px;flex:0 0 auto;display:block}
+.pad svg,.frog svg{display:block;width:100%;height:100%}
+/* the frog is drawn smaller than its cell so the pad's coloured rim shows through */
+.frog svg{transform:scale(.74);transform-origin:50% 50%}
+.pad{transition:filter .25s ease,opacity .25s ease}
+.pad.lit{filter:drop-shadow(0 0 9px color-mix(in srgb,var(--accent) 85%,transparent))}
+.pad:not(.lit){opacity:.88}
+.frog{transition:filter .2s ease}
+.frog:not(.home){filter:saturate(.7) brightness(.95)}
+.frog.hop{animation:hop .34s cubic-bezier(.3,1.6,.5,1)}
+@keyframes hop{0%{transform:translateY(0) scale(1)}45%{transform:translateY(-11px) scale(1.07,.93)}100%{transform:translateY(0) scale(1)}}
+.frog.cheer{animation:cheer .5s ease-in-out 2}
+@keyframes cheer{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:reduce){ .frog.hop,.frog.cheer{animation:none} }
+
+.banner{min-height:22px;margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:14px;
+  color:var(--good);text-align:center;max-width:32ch}
+.banner.hint{font-family:"Karla",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--ink-2)}
+.banner b{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+.index{margin-top:30px;border-top:1.5px solid var(--ink);padding-top:12px}
+.index h2{margin:0 0 10px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);font-weight:700}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dots button{font-family:"JetBrains Mono",monospace;font-size:12px;width:32px;height:32px;
+  border:1px solid var(--rule);background:transparent;color:var(--ink-2);border-radius:3px;cursor:pointer}
+.dots button:hover{border-color:var(--ink-2);color:var(--ink)}
+.dots button.done{background:var(--pad);border-color:var(--pad);color:#f2f7f1}
+.dots button.now{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink);border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{margin-top:26px;font-size:12px;color:var(--ink-2);padding-bottom:24px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">A field study in CSS flexbox &middot; 24 plates</p>
+      <h1>Lilypad Logic</h1>
+      <p class="sub">Every frog wants the lilypad of its own colour. You never move a frog &mdash; you write flexbox on the pond, and the pond arranges them.</p>
+    </div>
+    <button class="theme-btn" id="theme-toggle" type="button">Night pond</button>
+  </header>
+
+  <div class="board">
+    <section class="brief">
+      <div class="plate-line">
+        <span class="plate-no" id="plate-no">Plate 01 / 24</span>
+        <span class="species" id="species">Hyla cinerea</span>
+      </div>
+      <p class="task" id="task"></p>
+
+      <div class="editor">
+        <div class="editor-head">
+          <span>Pond stylesheet</span>
+          <span class="status" id="status"><span class="dot"></span><span id="status-text">Unsolved</span></span>
+        </div>
+        <div id="rules"></div>
+        <ul class="issues" id="issues" hidden></ul>
+      </div>
+
+      <div class="controls">
+        <button class="btn ghost" id="reset" type="button">Clear</button>
+        <button class="btn ghost" id="prev" type="button">Previous</button>
+        <button class="btn go" id="next" type="button">Next plate</button>
+      </div>
+
+      <details class="docs" id="docs">
+        <summary>Field notes on the properties in play</summary>
+        <div id="docs-body"></div>
+      </details>
+    </section>
+
+    <section class="pond-col">
+      <div id="pond-stage">
+        <div id="lilypads"></div>
+        <div id="pond"></div>
+      </div>
+      <p class="banner" id="banner"></p>
+    </section>
+  </div>
+
+  <section class="index">
+    <h2>Plate index</h2>
+    <div class="dots" id="dots"></div>
+  </section>
+
+  <footer>CSS applies as you type. Any declaration that lands every frog on its matching pad counts &mdash; there is usually more than one way.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SPECIES=["Hyla cinerea","Rana temporaria","Pseudacris crucifer","Litoria caerulea",
+  "Bombina orientalis","Dendrobates tinctorius","Agalychnis callidryas","Xenopus laevis",
+  "Ceratophrys ornata","Phyllobates terribilis","Atelopus zeteki","Lithobates catesbeianus",
+  "Hyperolius viridiflavus","Mantella aurantiaca","Bufo bufo","Scaphiopus holbrookii",
+  "Espadarana prosoblepon","Theloderma corticale","Rhacophorus nigropalmatus","Pipa pipa",
+  "Breviceps macrops","Conraua goliath","Pseudis paradoxa","Rheobatrachus silus"];
+
+  var G="green", Y="yellow", R="red";
+  var THREE=[G,Y,R];
+  var EIGHT=[G,Y,R,G,Y,R,G,Y];
+  var TWELVE=[G,Y,R,G,Y,R,G,Y,R,G,Y,R];
+
+  var LEVELS=[
+    {frogs:[G], task:"The frog sits on the left bank; its pad waits at the far right. Send it across with <code>justify-content</code>.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:flex-end}", props:["justify-content"]},
+    {frogs:[G], task:"Now bring the frog to the centre of the pond.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:center}", props:["justify-content"]},
+    {frogs:THREE, task:"Three frogs, three pads, the outer two hugging the banks.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:space-between}", props:["justify-content"]},
+    {frogs:THREE, task:"Same three, but each pad now keeps equal water on either side of it.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:space-around}", props:["justify-content"]},
+    {frogs:[G], task:"The pad has drifted to the pond floor. <code>align-items</code> works down the cross axis.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{align-items:flex-end}", props:["align-items"]},
+    {frogs:[G], task:"Dead centre of the pond &mdash; you will need both axes.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:center;align-items:center}", props:["justify-content","align-items"]},
+    {frogs:THREE, task:"Three pads along the floor, evenly surrounded. Combine the two properties.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{justify-content:space-around;align-items:flex-end}", props:["justify-content","align-items"]},
+    {frogs:THREE, task:"The pads run green, yellow, red inwards from the right bank. Turn the main axis around.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:row-reverse}", props:["flex-direction"]},
+    {frogs:THREE, task:"The pads are stacked down the left bank. Stand the main axis up.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:column}", props:["flex-direction"]},
+    {frogs:THREE, task:"Reversed order, packed against the left bank. Watch how <code>flex-end</code> follows the reversed axis.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:row-reverse;justify-content:flex-end}", props:["flex-direction","justify-content"]},
+    {frogs:THREE, task:"A column resting on the pond floor.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:column;justify-content:flex-end}", props:["flex-direction","justify-content"]},
+    {frogs:THREE, task:"A column read bottom to top, stretched from floor to surface.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:column-reverse;justify-content:space-between}", props:["flex-direction","justify-content"]},
+    {frogs:THREE, task:"Reversed row, centred, sitting on the bottom. Three declarations.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:row-reverse;justify-content:center;align-items:flex-end}", props:["flex-direction","justify-content","align-items"]},
+    {frogs:THREE, task:"Leave the pond alone &mdash; the yellow frog simply belongs last. Give it an <code>order</code>.",
+     eds:[{sel:".yellow"}], sol:"#lilypads .p-yellow{order:1}", props:["order"]},
+    {frogs:THREE, task:"Red first, then green, then yellow. Every frog starts at <code>order: 0</code>, and negatives are allowed.",
+     eds:[{sel:".red"},{sel:".yellow"}], sol:"#lilypads .p-red{order:-1}#lilypads .p-yellow{order:1}", props:["order"]},
+    {frogs:THREE, task:"One frog breaks rank: the yellow pad dropped to the floor. <code>align-self</code> overrides the pond for a single item.",
+     eds:[{sel:".yellow"}], sol:"#lilypads .p-yellow{align-self:flex-end}", props:["align-self","align-items"]},
+    {frogs:THREE, task:"Pads centred and sunk to the floor &mdash; except the yellow one, still at the surface.",
+     eds:[{sel:"#pond"},{sel:".yellow"}], sol:"#lilypads{justify-content:center;align-items:flex-end}#lilypads .p-yellow{align-self:flex-start}", props:["justify-content","align-items","align-self"]},
+    {frogs:EIGHT, task:"Eight frogs, one row too narrow. Let the line break with <code>flex-wrap</code>.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-wrap:wrap}", props:["flex-wrap"]},
+    {frogs:EIGHT, task:"The pads fill downwards first, then start a new column.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-direction:column;flex-wrap:wrap}", props:["flex-direction","flex-wrap"]},
+    {frogs:EIGHT, task:"Same wrapping, rows now reading right to left. <code>flex-flow</code> is the shorthand for direction and wrap.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-flow:row-reverse wrap}", props:["flex-flow"]},
+    {frogs:TWELVE, task:"Twelve frogs wrap into two rows, both pushed up to the surface. <code>align-content</code> spaces the lines themselves.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-wrap:wrap;align-content:flex-start}", props:["flex-wrap","align-content"]},
+    {frogs:TWELVE, task:"Both rows now settled on the pond floor.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-wrap:wrap;align-content:flex-end}", props:["flex-wrap","align-content"]},
+    {frogs:TWELVE, task:"The two rows of pads float together in the middle of the pond.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-wrap:wrap;align-content:center}", props:["flex-wrap","align-content"]},
+    {frogs:TWELVE, task:"Final plate. Columns filled bottom to top, wrapping backwards, centred along the main axis, the two columns pushed to opposite banks.",
+     eds:[{sel:"#pond"}], sol:"#lilypads{flex-flow:column-reverse wrap-reverse;justify-content:center;align-content:space-between}",
+     props:["flex-flow","justify-content","align-content"]}
+  ];
+
+  var DOCS={
+    "flex-direction":{d:"Sets the main axis — the line frogs are laid out along.",v:["row","row-reverse","column","column-reverse"]},
+    "justify-content":{d:"Positions frogs along the main axis.",v:["flex-start","flex-end","center","space-between","space-around","space-evenly"]},
+    "align-items":{d:"Positions frogs along the cross axis, the one at right angles to the main axis.",v:["flex-start","flex-end","center","baseline","stretch"]},
+    "align-self":{d:"Same as align-items, but written on one frog instead of the pond.",v:["flex-start","flex-end","center","baseline","stretch"]},
+    "order":{d:"Reorders a single frog. Every frog starts at 0; lower values swim to the front.",v:["-1","0","1","2"]},
+    "flex-wrap":{d:"Lets frogs spill onto a second line instead of squeezing into one.",v:["nowrap","wrap","wrap-reverse"]},
+    "flex-flow":{d:"Shorthand for flex-direction then flex-wrap, in that order.",v:["row wrap","column wrap","row-reverse wrap","column-reverse wrap-reverse"]},
+    "align-content":{d:"Spaces the wrapped lines themselves along the cross axis. Needs more than one line.",v:["flex-start","flex-end","center","space-between","space-around","stretch"]}
+  };
+
+  var ALLOWED={"display":1,"flex-direction":1,"flex-wrap":1,"flex-flow":1,"justify-content":1,
+    "align-items":1,"align-content":1,"align-self":1,"order":1,"flex":1,"flex-grow":1,
+    "flex-shrink":1,"flex-basis":1,"gap":1,"row-gap":1,"column-gap":1};
+
+  var HEX={green:"#59b54a",yellow:"#efbe2c",red:"#dd5540"};
+
+  function frogSvg(color){
+    var c=HEX[color];
+    return '<svg viewBox="0 0 64 64" aria-hidden="true">'+
+      '<ellipse cx="32" cy="41" rx="21" ry="17" fill="'+c+'" stroke="rgba(9,24,17,.5)" stroke-width="1.6"></ellipse>'+
+      '<ellipse cx="32" cy="46" rx="14" ry="9" fill="rgba(255,255,255,.22)"></ellipse>'+
+      '<circle cx="19" cy="22" r="11" fill="'+c+'" stroke="rgba(9,24,17,.5)" stroke-width="1.6"></circle>'+
+      '<circle cx="45" cy="22" r="11" fill="'+c+'" stroke="rgba(9,24,17,.5)" stroke-width="1.6"></circle>'+
+      '<circle cx="19" cy="22" r="7" fill="#fdfbf2"></circle><circle cx="45" cy="22" r="7" fill="#fdfbf2"></circle>'+
+      '<circle cx="21" cy="23" r="3.6" fill="#10211a"></circle><circle cx="43" cy="23" r="3.6" fill="#10211a"></circle>'+
+      '<path d="M22 44 q10 8 20 0" stroke="rgba(16,33,26,.55)" stroke-width="2.6" fill="none" stroke-linecap="round"></path>'+
+      '</svg>';
+  }
+  // The pad is drawn wider than the frog that sits on it, so its coloured
+  // rim stays readable even when the frog is standing right on top.
+  function padSvg(color){
+    var c=HEX[color];
+    return '<svg viewBox="0 0 64 64" aria-hidden="true">'+
+      '<circle cx="32" cy="32" r="30" fill="var(--pad)"></circle>'+
+      '<path d="M32 32 L61.5 23 A30 30 0 0 1 61.5 41 Z" fill="var(--water-2)"></path>'+
+      '<circle cx="32" cy="32" r="28" fill="none" stroke="'+c+'" stroke-width="4.5"></circle>'+
+      '<circle cx="32" cy="32" r="22.5" fill="none" stroke="'+c+'" stroke-width="1.5" opacity=".45"></circle>'+
+      '<circle cx="32" cy="32" r="6" fill="'+c+'" opacity=".85"></circle>'+
+      '</svg>';
+  }
+
+  var pond=document.getElementById("pond"),
+      pads=document.getElementById("lilypads"),
+      rulesEl=document.getElementById("rules"),
+      issuesEl=document.getElementById("issues"),
+      taskEl=document.getElementById("task"),
+      plateEl=document.getElementById("plate-no"),
+      speciesEl=document.getElementById("species"),
+      bannerEl=document.getElementById("banner"),
+      dotsEl=document.getElementById("dots"),
+      docsBody=document.getElementById("docs-body"),
+      statusEl=document.getElementById("status"),
+      statusText=document.getElementById("status-text"),
+      nextBtn=document.getElementById("next"),
+      prevBtn=document.getElementById("prev");
+
+  var userStyle=document.createElement("style"); document.head.appendChild(userStyle);
+  var padStyle=document.createElement("style"); document.head.appendChild(padStyle);
+
+  var state={level:0,solved:{},text:{}};
+  var advanceTimer=null;
+
+  function load(){
+    try{
+      var raw=localStorage.getItem("lilypad-logic");
+      if(raw){
+        var s=JSON.parse(raw);
+        if(s&&typeof s==="object"){
+          state.solved=s.solved||{}; state.text=s.text||{};
+          if(typeof s.level==="number") state.level=Math.min(Math.max(s.level,0),LEVELS.length-1);
+        }
+      }
+    }catch(e){}
+  }
+  function save(){ try{ localStorage.setItem("lilypad-logic",JSON.stringify(state)); }catch(e){} }
+
+  var PROP_LIST=[]; for(var ak in ALLOWED) PROP_LIST.push(ak);
+
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  function distance(a,b){
+    var m=a.length,n=b.length,prev=[],cur=[],i,j;
+    for(j=0;j<=n;j++) prev[j]=j;
+    for(i=1;i<=m;i++){
+      cur[0]=i;
+      for(j=1;j<=n;j++){
+        cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));
+      }
+      prev=cur.slice();
+    }
+    return prev[n];
+  }
+  function nearestProp(p){
+    var best=null,bd=99;
+    for(var i=0;i<PROP_LIST.length;i++){
+      var d=distance(p,PROP_LIST[i]);
+      if(d<bd){ bd=d; best=PROP_LIST[i]; }
+    }
+    return bd<=3?best:null;
+  }
+  function nearestValue(prop,val){
+    var d=DOCS[prop]; if(!d) return null;
+    var best=null,bd=99;
+    for(var i=0;i<d.v.length;i++){
+      var x=distance(val,d.v[i]);
+      if(x<bd){ bd=x; best=d.v[i]; }
+    }
+    return bd<=3?best:null;
+  }
+  function supportsProp(p){
+    try{ return window.CSS&&CSS.supports?CSS.supports(p+": inherit"):true; }catch(e){ return true; }
+  }
+  function supportsValue(p,v){
+    try{ return window.CSS&&CSS.supports?CSS.supports(p,v):true; }catch(e){ return true; }
+  }
+
+  // Turns one textarea into safe CSS plus a list of plain-language complaints.
+  function analyze(raw){
+    var parts=String(raw||"").split(";"), out=[], issues=[], i;
+    for(i=0;i<parts.length;i++){
+      var t=parts[i].trim();
+      if(!t) continue;
+      if(/[{}@<>]|url\(/.test(t)){
+        issues.push("Only plain <code>property: value;</code> lines belong inside the braces.");
+        continue;
+      }
+      var k=t.indexOf(":");
+      if(k<0){
+        var maybe=nearestProp(t.toLowerCase());
+        issues.push("<code>"+esc(t)+"</code> is missing its colon &mdash; write <code>"+
+          (maybe||"property")+": value;</code>");
+        continue;
+      }
+      var prop=t.slice(0,k).trim().toLowerCase(), val=t.slice(k+1).trim();
+      if(!prop){ issues.push("A value with no property in front of it."); continue; }
+      if(!val){ issues.push("<code>"+esc(prop)+"</code> has no value yet."); continue; }
+      if(val.indexOf(":")>-1){
+        issues.push("Missing semicolon &mdash; every declaration ends with <code>;</code> before the next one starts.");
+        continue;
+      }
+      if(!ALLOWED[prop]){
+        var guess=nearestProp(prop);
+        if(guess) issues.push("There is no property called <code>"+esc(prop)+"</code>. Did you mean <code>"+guess+"</code>?");
+        else if(supportsProp(prop)) issues.push("<code>"+esc(prop)+"</code> is real CSS, but this pond only responds to flexbox properties.");
+        else issues.push("<code>"+esc(prop)+"</code> is not a CSS property.");
+        continue;
+      }
+      if(!supportsValue(prop,val)){
+        var vg=nearestValue(prop,val), d=DOCS[prop];
+        var msg="<code>"+esc(prop)+"</code> does not accept <code>"+esc(val)+"</code>.";
+        if(vg) msg+=" Did you mean <code>"+vg+"</code>?";
+        else if(d) msg+=" It takes: <code>"+d.v.join("</code>, <code>")+"</code>.";
+        issues.push(msg);
+        continue;
+      }
+      out.push(prop+":"+val);
+    }
+    return {css:out.join(";"), issues:issues, count:out.length};
+  }
+
+  function applyUser(){
+    var lvl=LEVELS[state.level], css="", issues=[], written=0;
+    var areas=rulesEl.querySelectorAll("textarea.decls");
+    for(var i=0;i<areas.length;i++){
+      var r=analyze(areas[i].value);
+      written+=r.count;
+      if(r.css) css+="#pond-stage "+lvl.eds[i].sel+"{"+r.css+"}";
+      for(var j=0;j<r.issues.length;j++){
+        issues.push(areas.length>1?("In <code>"+lvl.eds[i].sel+"</code>: "+r.issues[j]):r.issues[j]);
+      }
+    }
+    userStyle.textContent=css;
+    return {issues:issues, written:written};
+  }
+
+  var issueTimer=null;
+
+  function paintIssues(list){
+    issuesEl.textContent="";
+    if(!list.length){ issuesEl.hidden=true; return; }
+    issuesEl.hidden=false;
+    for(var i=0;i<list.length;i++){
+      var li=document.createElement("li");
+      li.innerHTML=list[i];
+      issuesEl.appendChild(li);
+    }
+  }
+
+  // Half-typed words are not mistakes, so hold the notes back until typing pauses.
+  function showIssues(list,defer){
+    clearTimeout(issueTimer);
+    if(!defer||!list.length){ paintIssues(list); return; }
+    issuesEl.hidden=true;
+    issueTimer=setTimeout(function(){ paintIssues(list); },700);
+  }
+
+  var reduceMotion=window.matchMedia?window.matchMedia("(prefers-reduced-motion: reduce)"):{matches:false};
+
+  function hop(){
+    if(reduceMotion.matches) return;
+    var f=pond.children;
+    for(var i=0;i<f.length;i++){
+      (function(el,n){
+        el.classList.remove("hop");
+        void el.offsetWidth;
+        setTimeout(function(){ el.classList.add("hop"); }, n*22);
+      })(f[i],i);
+    }
+  }
+
+  // Which frog reached which pad. -1 means that frog is still in open water.
+  function landed(){
+    var frogs=pond.children, p=pads.children, map=[], used=[], home=0, i, j;
+    for(i=0;i<frogs.length;i++){
+      var f=frogs[i], hit=-1;
+      for(j=0;j<p.length;j++){
+        if(used[j]||p[j].getAttribute("data-color")!==f.getAttribute("data-color")) continue;
+        if(Math.abs(p[j].offsetLeft-f.offsetLeft)<=8 && Math.abs(p[j].offsetTop-f.offsetTop)<=8){ hit=j; break; }
+      }
+      if(hit>-1){ used[hit]=true; home++; }
+      map.push(hit);
+    }
+    return {map:map, used:used, home:home, total:frogs.length};
+  }
+
+  function evaluate(fromTyping){
+    var report=applyUser();
+    if(fromTyping) hop();
+
+    var res=landed(), win=res.total>0 && res.home===res.total, i;
+    var padEls=pads.children, frogEls=pond.children;
+
+    for(i=0;i<padEls.length;i++) padEls[i].classList.toggle("lit",!!res.used[i]);
+    for(i=0;i<frogEls.length;i++) frogEls[i].classList.toggle("home",res.map[i]>-1);
+
+    statusEl.classList.toggle("solved",win);
+    statusText.textContent=win?"Solved":(report.written?report.written+" rule"+(report.written===1?"":"s")+" applied":"Unsolved");
+
+    showIssues(win?[]:report.issues, fromTyping);
+    clearTimeout(advanceTimer);
+
+    if(win){
+      bannerEl.className="banner";
+      bannerEl.textContent = state.level===LEVELS.length-1
+        ? "Every frog home. The study is complete."
+        : "Every frog home — on to plate "+pad2(state.level+2)+".";
+      if(!state.solved[state.level]){ state.solved[state.level]=true; paintDots(); }
+      for(i=0;i<frogEls.length;i++) frogEls[i].classList.add("cheer");
+      if(state.level<LEVELS.length-1){
+        advanceTimer=setTimeout(function(){ go(state.level+1); },1600);
+      }
+    }else{
+      bannerEl.className="banner hint";
+      for(i=0;i<frogEls.length;i++) frogEls[i].classList.remove("cheer");
+      if(!report.written && !report.issues.length){
+        bannerEl.innerHTML="Nothing written yet &mdash; the pond is using its defaults.";
+      }else if(report.issues.length && !report.written){
+        bannerEl.innerHTML="That line never reached the pond. See the note above.";
+      }else{
+        bannerEl.innerHTML="<b>"+res.home+" of "+res.total+"</b> frog"+(res.total===1?"":"s")+
+          " on the right pad"+(res.home===1?"":"s")+"."+
+          (report.issues.length?(report.issues.length===1?" One line was ignored &mdash; see above.":" Some lines were ignored &mdash; see above."):"");
+      }
+    }
+    save();
+  }
+
+  function pad2(n){ return (n<10?"0":"")+n; }
+
+  function autoSize(ta){ ta.style.height="auto"; ta.style.height=Math.max(ta.scrollHeight,24)+"px"; }
+
+  function buildEditors(lvl){
+    rulesEl.textContent="";
+    lvl.eds.forEach(function(ed,i){
+      var block=document.createElement("div"); block.className="rule-block";
+      var open=document.createElement("div"); open.className="sel";
+      open.innerHTML="<b>"+ed.sel+"</b> {";
+      var ta=document.createElement("textarea");
+      ta.className="decls"; ta.id="decls-"+i; ta.rows=1; ta.spellcheck=false;
+      ta.setAttribute("aria-label","CSS declarations for "+ed.sel);
+      if(i===0) ta.placeholder="property: value;";
+      var keyed=state.text[state.level+":"+i];
+      ta.value=keyed===undefined?"":keyed;
+      ta.addEventListener("input",function(){
+        state.text[state.level+":"+i]=ta.value;
+        autoSize(ta);
+        evaluate(true);
+      });
+      var close=document.createElement("div"); close.className="sel"; close.textContent="}";
+      block.appendChild(open); block.appendChild(ta); block.appendChild(close);
+      rulesEl.appendChild(block);
+      autoSize(ta);
+    });
+  }
+
+  function buildDocs(lvl){
+    docsBody.textContent="";
+    lvl.props.forEach(function(p){
+      var d=DOCS[p];
+      if(!d) return;
+      var box=document.createElement("div"); box.className="doc";
+      var h=document.createElement("h3"); h.textContent=p;
+      var para=document.createElement("p"); para.textContent=d.d;
+      var vals=document.createElement("div"); vals.className="vals";
+      d.v.forEach(function(v){
+        var b=document.createElement("button");
+        b.type="button"; b.textContent=v; b.title="Insert "+p+": "+v;
+        b.addEventListener("click",function(){
+          var ta=rulesEl.querySelector("textarea.decls");
+          if(!ta) return;
+          var cur=ta.value.trim();
+          ta.value=(cur?cur.replace(/;?$/,";")+"\n":"")+p+": "+v+";";
+          state.text[state.level+":0"]=ta.value;
+          autoSize(ta); ta.focus(); evaluate(true);
+        });
+        vals.appendChild(b);
+      });
+      box.appendChild(h); box.appendChild(para); box.appendChild(vals);
+      docsBody.appendChild(box);
+    });
+  }
+
+  function paintDots(){
+    dotsEl.textContent="";
+    LEVELS.forEach(function(l,i){
+      var b=document.createElement("button");
+      b.type="button"; b.textContent=pad2(i+1);
+      if(state.solved[i]) b.className="done";
+      if(i===state.level) b.className=(b.className+" now").trim();
+      b.setAttribute("aria-label","Plate "+(i+1)+(state.solved[i]?", solved":""));
+      b.addEventListener("click",function(){ go(i); });
+      dotsEl.appendChild(b);
+    });
+  }
+
+  function go(i){
+    clearTimeout(advanceTimer);
+    state.level=Math.min(Math.max(i,0),LEVELS.length-1);
+    var lvl=LEVELS[state.level];
+
+    plateEl.textContent="Plate "+pad2(state.level+1)+" / "+LEVELS.length;
+    speciesEl.textContent=SPECIES[state.level];
+    taskEl.innerHTML=lvl.task;
+
+    pond.textContent=""; pads.textContent="";
+    lvl.frogs.forEach(function(c){
+      var f=document.createElement("div");
+      f.className="frog "+c;
+      f.setAttribute("data-color",c);
+      f.setAttribute("role","img");
+      f.setAttribute("aria-label",c+" frog");
+      f.innerHTML=frogSvg(c);
+      pond.appendChild(f);
+
+      var p=document.createElement("div");
+      p.className="pad p-"+c;
+      p.setAttribute("data-color",c);
+      p.innerHTML=padSvg(c);
+      pads.appendChild(p);
+    });
+
+    padStyle.textContent=lvl.sol.replace(/#lilypads/g,"#pond-stage #lilypads");
+    buildEditors(lvl);
+    buildDocs(lvl);
+    paintDots();
+    prevBtn.disabled=state.level===0;
+    nextBtn.disabled=state.level===LEVELS.length-1;
+    evaluate(false);
+  }
+
+  document.getElementById("reset").addEventListener("click",function(){
+    var areas=rulesEl.querySelectorAll("textarea.decls");
+    for(var i=0;i<areas.length;i++){
+      areas[i].value="";
+      state.text[state.level+":"+i]="";
+      autoSize(areas[i]);
+    }
+    evaluate(false);
+    if(areas[0]) areas[0].focus();
+  });
+  nextBtn.addEventListener("click",function(){ go(state.level+1); });
+  prevBtn.addEventListener("click",function(){ go(state.level-1); });
+
+  var root=document.documentElement, tbtn=document.getElementById("theme-toggle");
+  function isDark(){
+    var attr=root.getAttribute("data-theme");
+    if(attr==="dark") return true;
+    if(attr==="light") return false;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function syncThemeLabel(){ tbtn.textContent=isDark()?"Day pond":"Night pond"; }
+  tbtn.addEventListener("click",function(){
+    root.setAttribute("data-theme", isDark()?"light":"dark");
+    syncThemeLabel();
+  });
+  syncThemeLabel();
+
+  load();
+  go(state.level);
+})();
+</script>
+
+</body>
+</html>
