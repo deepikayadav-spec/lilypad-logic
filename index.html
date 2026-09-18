@@ -16,16 +16,6 @@
   --green:#4ade6a; --yellow:#ffd23d; --red:#ff5c5c;
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --bg:#eef3ea; --surface:#fff; --line:#d5e0d3;
-    --text:#0d1512; --dim:#5d7568;
-    --water:#3fa99a; --water-2:#2a7a79; --deep:#1d5a5c;
-    --pad:#2f7a52;
-    --lime:#3f9e12; --lime-ink:#fff;
-    color-scheme:light;
-  }
-}
 
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -67,12 +57,13 @@ main{
   max-width:1180px; width:100%; margin:0 auto;
 }
 @media (min-width:900px){
-  main{grid-template-columns:minmax(0,1.5fr) minmax(320px,.85fr);align-items:start}
+  main{grid-template-columns:auto minmax(330px,1fr);align-items:center;gap:26px}
 }
 
 .pondwrap{display:flex;flex-direction:column;gap:10px;align-items:center;min-width:0}
+/* square, and never taller than the screen — no scrolling to see the pond */
 #stage{
-  position:relative; width:100%; max-width:min(620px,100%); aspect-ratio:1/1;
+  position:relative; width:min(100%,660px,calc(100dvh - 120px)); aspect-ratio:1/1;
   border-radius:18px; overflow:hidden;
   background:
     radial-gradient(130% 95% at 28% 8%, color-mix(in srgb,var(--water) 78%,#fff 22%), transparent 58%),
