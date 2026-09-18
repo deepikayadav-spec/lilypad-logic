@@ -581,8 +581,8 @@ textarea::placeholder{color:var(--dim);opacity:.5}
       if(i===0) ta.placeholder="property: value;";
       ta.value=state.text[state.level+":"+i]||"";
       ta.addEventListener("focus",function(){ setActive(i); });
-      block.addEventListener("mousedown",function(){ setActive(i); });
-      block.addEventListener("click",function(){ ta.focus(); });
+      box.addEventListener("mousedown",function(){ setActive(i); });
+      box.addEventListener("click",function(){ ta.focus(); });
       ta.addEventListener("input",function(){
         state.text[state.level+":"+i]=ta.value;
         fit(ta); check(true);
