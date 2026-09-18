@@ -177,6 +177,39 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   background:var(--bg);border:1px solid var(--line);padding:0 5px;border-radius:5px;
 }
 :focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+
+/* ---- phones ---- */
+@media (max-width:899px){
+  body{padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px));gap:10px}
+  .brand{font-size:16px}
+  .brand span{font-size:18px}
+  /* fat enough to hit with a thumb */
+  .level button{padding:9px 12px;font-size:17px}
+  main{gap:12px}
+
+  /* the pond stays pinned while the code scrolls under it, so a frog that
+     moves as you type is never hidden behind the keyboard */
+  .pondwrap{
+    position:sticky;top:0;z-index:5;
+    background:var(--bg);padding-bottom:8px;gap:6px;
+  }
+  #stage{width:min(100%,46dvh);border-radius:14px}
+  .score{font-size:12px}
+
+  .goal{font-size:15px}
+  /* 16px stops iOS zooming the page when the caret lands */
+  textarea{font-size:16px;line-height:1.6;padding-left:18px}
+  .rule{font-size:15px}
+  .chip{font-size:12px;padding:9px 12px}
+  .kit{padding:10px 12px;gap:9px}
+  .hints li{font-size:13.5px}
+}
+@media (max-width:899px) and (orientation:landscape){
+  /* pond and code side by side, since height is the scarce axis */
+  main{grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:start}
+  .pondwrap{position:static}
+  #stage{width:min(100%,calc(100dvh - 92px))}
+}
 </style>
 </head>
 <body>
