@@ -123,8 +123,13 @@ main{
 .code-top button:hover{color:var(--text)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--line);display:inline-block;margin-right:6px;vertical-align:1px}
 .code-top.solved{color:var(--lime)} .code-top.solved .dot{background:var(--lime)}
-.rule{padding:11px 14px;font-family:"JetBrains Mono",monospace;font-size:13.5px}
+.rule{
+  padding:11px 14px;font-family:"JetBrains Mono",monospace;font-size:13.5px;
+  border-left:2px solid transparent;cursor:text;
+}
 .rule + .rule{border-top:1px dashed var(--line)}
+/* only worth pointing out when there's more than one rule to write into */
+.multi .rule.active{border-left-color:var(--lime)}
 .sel{color:var(--dim)} .sel b{color:var(--text);font-weight:700}
 textarea{
   display:block;width:100%;resize:none;border:0;outline:0;background:none;
@@ -140,6 +145,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--dim);margin-right:2px;
 }
+.kit-label .target{color:var(--lime);font-weight:700}
 .chip{
   font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:1;
   padding:6px 9px;border-radius:999px;cursor:pointer;
@@ -317,7 +323,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   var userStyle=document.createElement("style"); document.head.appendChild(userStyle);
   var solStyle=document.createElement("style"); document.head.appendChild(solStyle);
 
-  var state={level:0,solved:{},text:{}}, advance=null, hintTimer=null, activeTa=null;
+  var state={level:0,solved:{},text:{}}, advance=null, hintTimer=null, activeIdx=0;
 
   function load(){
     try{
@@ -494,13 +500,21 @@ textarea::placeholder{color:var(--dim);opacity:.5}
     return out;
   }
 
+  // which rule the chips write into, and the label that says so
+  function setActive(i){
+    var blocks=rulesEl.querySelectorAll(".rule");
+    activeIdx=Math.min(Math.max(i,0),blocks.length-1);
+    for(var j=0;j<blocks.length;j++) blocks[j].classList.toggle("active",j===activeIdx);
+    var tag=kitEl.querySelector(".target");
+    if(tag) tag.textContent=LEVELS[state.level].eds[activeIdx].sel;
+  }
+
   function write(prop,val){
-    var ta=activeTa||rulesEl.querySelector("textarea");
+    var tas=rulesEl.querySelectorAll("textarea"), ta=tas[activeIdx];
     if(!ta) return;
     var cur=ta.value.trim();
     ta.value=(cur?cur.replace(/;?$/,";")+"\n":"")+prop+": "+val+";";
-    var i=[].indexOf.call(rulesEl.querySelectorAll("textarea"),ta);
-    state.text[state.level+":"+i]=ta.value;
+    state.text[state.level+":"+activeIdx]=ta.value;
     fit(ta); ta.focus(); check(true);
   }
 
@@ -530,8 +544,15 @@ textarea::placeholder{color:var(--dim);opacity:.5}
 
     function showVals(p){
       vals.textContent="";
-      var lab=document.createElement("span"); lab.className="kit-label"; lab.textContent="tap to insert";
-      vals.appendChild(lab);
+      var lab=document.createElement("span"); lab.className="kit-label";
+      if(lvl.eds.length>1){
+        lab.innerHTML='tap to insert into <b class="target"></b>';
+        vals.appendChild(lab);
+        lab.querySelector(".target").textContent=lvl.eds[activeIdx].sel;
+      }else{
+        lab.textContent="tap to insert";
+        vals.appendChild(lab);
+      }
       (VALS[p]||[]).forEach(function(v){
         var b=document.createElement("button");
         b.type="button"; b.className="chip val"; b.textContent=v;
@@ -548,6 +569,8 @@ textarea::placeholder{color:var(--dim);opacity:.5}
 
   function buildEditors(lvl){
     rulesEl.textContent="";
+    activeIdx=0;
+    rulesEl.classList.toggle("multi",lvl.eds.length>1);
     lvl.eds.forEach(function(ed,i){
       var box=document.createElement("div"); box.className="rule";
       var open=document.createElement("div"); open.className="sel";
@@ -555,9 +578,11 @@ textarea::placeholder{color:var(--dim);opacity:.5}
       var ta=document.createElement("textarea");
       ta.rows=1; ta.spellcheck=false;
       ta.setAttribute("aria-label","css for "+ed.sel);
-      if(i===0){ ta.placeholder="property: value;"; activeTa=ta; }
+      if(i===0) ta.placeholder="property: value;";
       ta.value=state.text[state.level+":"+i]||"";
-      ta.addEventListener("focus",function(){ activeTa=ta; });
+      ta.addEventListener("focus",function(){ setActive(i); });
+      block.addEventListener("mousedown",function(){ setActive(i); });
+      block.addEventListener("click",function(){ ta.focus(); });
       ta.addEventListener("input",function(){
         state.text[state.level+":"+i]=ta.value;
         fit(ta); check(true);
@@ -592,6 +617,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
     solStyle.textContent=lvl.sol.replace(/#pads/g,"#stage #pads");
     buildEditors(lvl);
     buildKit(lvl);
+    setActive(0);
     prevBtn.disabled=state.level===0;
     nextBtn.disabled=state.level===LEVELS.length-1;
     check(false);
