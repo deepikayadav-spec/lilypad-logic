@@ -57,13 +57,13 @@ main{
   max-width:1180px; width:100%; margin:0 auto;
 }
 @media (min-width:900px){
-  main{grid-template-columns:auto minmax(330px,1fr);align-items:center;gap:26px}
+  main{grid-template-columns:minmax(0,1fr) minmax(320px,430px);align-items:center;gap:30px}
 }
 
 .pondwrap{display:flex;flex-direction:column;gap:10px;align-items:center;min-width:0}
 /* square, and never taller than the screen — no scrolling to see the pond */
 #stage{
-  position:relative; width:min(100%,660px,calc(100dvh - 120px)); aspect-ratio:1/1;
+  position:relative; width:min(100%,calc(100dvh - 118px)); aspect-ratio:1/1;
   border-radius:18px; overflow:hidden;
   background:
     radial-gradient(130% 95% at 28% 8%, color-mix(in srgb,var(--water) 78%,#fff 22%), transparent 58%),
