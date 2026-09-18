@@ -184,7 +184,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   .brand{font-size:16px}
   .brand span{font-size:18px}
   /* fat enough to hit with a thumb */
-  .level button{padding:9px 12px;font-size:17px}
+  .level button{padding:11px 15px;font-size:18px}
   main{gap:12px}
 
   /* the pond stays pinned while the code scrolls under it, so a frog that
@@ -200,15 +200,19 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   /* 16px stops iOS zooming the page when the caret lands */
   textarea{font-size:16px;line-height:1.6;padding-left:18px}
   .rule{font-size:15px}
-  .chip{font-size:12px;padding:9px 12px}
-  .kit{padding:10px 12px;gap:9px}
+  .chip{font-size:12px;padding:0 13px;min-height:38px;display:inline-flex;align-items:center}
+  .kit{padding:11px 12px;gap:10px}
+  .kit-row{gap:8px}
   .hints li{font-size:13.5px}
 }
 @media (max-width:899px) and (orientation:landscape){
-  /* pond and code side by side, since height is the scarce axis */
-  main{grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:start}
+  /* pond beside the code, since height is the scarce axis here.
+     Both columns stay fractional — an `auto` column makes the stage's
+     own width:100% circular and collapses it. */
+  main{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center}
   .pondwrap{position:static}
-  #stage{width:min(100%,calc(100dvh - 92px))}
+  #stage{width:min(100%,calc(100dvh - 86px))}
+  .goal{font-size:14px}
 }
 </style>
 </head>
