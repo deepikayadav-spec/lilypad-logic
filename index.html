@@ -133,6 +133,24 @@ textarea{
 }
 textarea::placeholder{color:var(--dim);opacity:.5}
 
+/* ---- the kit: which props are in play, and their legal values ---- */
+.kit{border-top:1px solid var(--line);padding:9px 14px;display:flex;flex-direction:column;gap:8px}
+.kit-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.kit-label{
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);margin-right:2px;
+}
+.chip{
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:1;
+  padding:6px 9px;border-radius:999px;cursor:pointer;
+  background:none;border:1px solid var(--line);color:var(--text);
+  transition:border-color .15s,color .15s,background .15s;
+}
+.chip:hover{border-color:var(--lime);color:var(--lime)}
+.chip.on{background:var(--lime);border-color:var(--lime);color:var(--lime-ink);font-weight:700}
+.chip.val{color:var(--dim)}
+.chip.val:hover{color:var(--lime)}
+
 .hints{
   margin:0;padding:0;list-style:none;border-top:1px solid var(--line);
   display:flex;flex-direction:column;
@@ -184,6 +202,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
         <button id="clear" type="button">clear</button>
       </div>
       <div id="rules"></div>
+      <div class="kit" id="kit"></div>
       <ul class="hints" id="hints" hidden></ul>
     </div>
   </div>
@@ -290,6 +309,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   var pond=document.getElementById("pond"), pads=document.getElementById("pads"),
       rulesEl=document.getElementById("rules"), hintsEl=document.getElementById("hints"),
       goalEl=document.getElementById("goal"), lvlEl=document.getElementById("lvl"),
+      kitEl=document.getElementById("kit"),
       scoreEl=document.getElementById("score"), topEl=document.getElementById("top"),
       stateEl=document.getElementById("state"),
       nextBtn=document.getElementById("next"), prevBtn=document.getElementById("prev");
@@ -297,7 +317,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
   var userStyle=document.createElement("style"); document.head.appendChild(userStyle);
   var solStyle=document.createElement("style"); document.head.appendChild(solStyle);
 
-  var state={level:0,solved:{},text:{}}, advance=null, hintTimer=null;
+  var state={level:0,solved:{},text:{}}, advance=null, hintTimer=null, activeTa=null;
 
   function load(){
     try{
@@ -466,6 +486,66 @@ textarea::placeholder{color:var(--dim);opacity:.5}
 
   function fit(ta){ ta.style.height="auto"; ta.style.height=Math.max(ta.scrollHeight,24)+"px"; }
 
+  // the props a level actually needs, read off its own answer so the two
+  // can never drift apart
+  function propsOf(sol){
+    var out=[], m, re=/([a-z-]+)\s*:/g;
+    while((m=re.exec(sol))) if(out.indexOf(m[1])<0) out.push(m[1]);
+    return out;
+  }
+
+  function write(prop,val){
+    var ta=activeTa||rulesEl.querySelector("textarea");
+    if(!ta) return;
+    var cur=ta.value.trim();
+    ta.value=(cur?cur.replace(/;?$/,";")+"\n":"")+prop+": "+val+";";
+    var i=[].indexOf.call(rulesEl.querySelectorAll("textarea"),ta);
+    state.text[state.level+":"+i]=ta.value;
+    fit(ta); ta.focus(); check(true);
+  }
+
+  function buildKit(lvl){
+    kitEl.textContent="";
+    var props=propsOf(lvl.sol), open=null;
+
+    var top=document.createElement("div"); top.className="kit-row";
+    var label=document.createElement("span"); label.className="kit-label";
+    label.textContent=props.length>1?"in play":"in play";
+    top.appendChild(label);
+
+    var vals=document.createElement("div"); vals.className="kit-row"; vals.hidden=true;
+
+    props.forEach(function(p){
+      var chip=document.createElement("button");
+      chip.type="button"; chip.className="chip"; chip.textContent=p;
+      chip.addEventListener("click",function(){
+        if(open===p){ open=null; vals.hidden=true; }
+        else{ open=p; showVals(p); }
+        [].forEach.call(top.querySelectorAll(".chip"),function(c){
+          c.classList.toggle("on",c.textContent===open);
+        });
+      });
+      top.appendChild(chip);
+    });
+
+    function showVals(p){
+      vals.textContent="";
+      var lab=document.createElement("span"); lab.className="kit-label"; lab.textContent="tap to insert";
+      vals.appendChild(lab);
+      (VALS[p]||[]).forEach(function(v){
+        var b=document.createElement("button");
+        b.type="button"; b.className="chip val"; b.textContent=v;
+        b.title=p+": "+v+";";
+        b.addEventListener("click",function(){ write(p,v); });
+        vals.appendChild(b);
+      });
+      vals.hidden=false;
+    }
+
+    kitEl.appendChild(top); kitEl.appendChild(vals);
+    if(props.length===1) { top.querySelector(".chip").click(); }
+  }
+
   function buildEditors(lvl){
     rulesEl.textContent="";
     lvl.eds.forEach(function(ed,i){
@@ -475,8 +555,9 @@ textarea::placeholder{color:var(--dim);opacity:.5}
       var ta=document.createElement("textarea");
       ta.rows=1; ta.spellcheck=false;
       ta.setAttribute("aria-label","css for "+ed.sel);
-      if(i===0) ta.placeholder="property: value;";
+      if(i===0){ ta.placeholder="property: value;"; activeTa=ta; }
       ta.value=state.text[state.level+":"+i]||"";
+      ta.addEventListener("focus",function(){ activeTa=ta; });
       ta.addEventListener("input",function(){
         state.text[state.level+":"+i]=ta.value;
         fit(ta); check(true);
@@ -510,6 +591,7 @@ textarea::placeholder{color:var(--dim);opacity:.5}
 
     solStyle.textContent=lvl.sol.replace(/#pads/g,"#stage #pads");
     buildEditors(lvl);
+    buildKit(lvl);
     prevBtn.disabled=state.level===0;
     nextBtn.disabled=state.level===LEVELS.length-1;
     check(false);
